@@ -4,10 +4,12 @@ const app = express();
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const UserRouter = require('./router/Users')
+const StripeRouter = require('./router/Stripe');
 
 app.use(express.json());
 app.use(cors());
 app.use('/UserAPI/',UserRouter)
+app.use('/StripeAPI/',StripeRouter)
 dotenv.config();
 
 const port = process.env.PORT

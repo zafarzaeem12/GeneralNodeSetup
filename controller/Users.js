@@ -9,6 +9,7 @@ const Register_New_User = async (req,res) => {
             username : req.body.username,
             email : req.body.email,
             password : CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_KEY).toString(),
+            country : req.body.country
         })
         const Register = await newUser.save();
         res.send({
