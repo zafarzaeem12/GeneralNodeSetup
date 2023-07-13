@@ -92,11 +92,11 @@ const Update_Existing_User = async (req,res,next) => {
             },
             { new : true}
         )
-    
+        const { password , ...others  } = Update_user._doc
         res.send({
             message: `User Updated Successfully`,
             data : 204,
-            data : Update_user
+            data : others
         })
     }catch(err){
         res.send({
@@ -135,7 +135,6 @@ const Delete_Existing_User = async ( req, res, next ) => {
 const User_Forget_Password = async (req,res , next ) => {
     try{
     const email = req.query.email;
-    console.log(email)
         const userfind = await User.findOne({ email : email })
         if(userfind.email == null){
             res.send({
@@ -183,7 +182,7 @@ const OTP_Verification = async (req,res , next) => {
             res.send({
                 message: 'OTP verified',
                 status : 200,
-                data : data?.email
+                data : {email : data?.email}
             })
         }else{
             res.send({
@@ -200,12 +199,12 @@ const OTP_Verification = async (req,res , next) => {
 }
 
 const User_Reset_Password = async (req,res,next) => {
-    const typed_OTP = req.query.otp;
+ 
     const typed_email = req.query.email;
     const typed_password = req.body.password
 
     const data = await User.findOne({ email : typed_email  });
-    if(typed_email  == data?.email &&  typed_OTP == data?.otp) {
+    if(typed_email  == data?.email ) {
         const gen_password = CryptoJS.AES.decrypt(data?.password , process.env.SECRET_KEY);
         const original_password = gen_password.toString(CryptoJS.enc.Utf8);
 
@@ -221,7 +220,7 @@ const User_Reset_Password = async (req,res,next) => {
             res.send({
                 message : "Password Changed Successfully",
                 status : 201,
-                data :others
+                data :others._doc
             })
         }else{
             res.send({

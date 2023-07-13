@@ -20,12 +20,17 @@ dotenv.config();
 
 const port = process.env.PORT;
 
+
+
 mongoose.set("strictQuery", true);
 mongoose
-  .connect(process.env.DATABASE_URL2)
+  .connect(
+    process.env.DATABASE_URL2 
+    )
   .then((res) => console.log(`Database connected successfully`))
-  .catch((err) => console.log(`Database not connected`));
+  .catch((err) => console.log(`Database not connected ${err}`));
 
 app.listen(port, () => {
   console.log(`Server is running on ${port} Port`);
 });
+

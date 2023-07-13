@@ -14,11 +14,11 @@ const {
 
 router.post('/create_new_User' , File.upload , Register_New_User);
 router.post('/login' , LoginRegisteredUser);
-router.post('/profile' ,auth ,VerifyRegisteredUser );
+router.get('/profile' ,auth ,VerifyRegisteredUser );
 router.put('/update',auth , Update_Existing_User );
 router.delete('/delete',auth , Delete_Existing_User );
 router.post('/forget_password' , User_Forget_Password );
-router.post('/otp' , OTP_Verification);
+router.post('/otp_verify' , OTP_Verification);
 router.post('/reset_password' , User_Reset_Password)
 
 module.exports = router
