@@ -3,17 +3,20 @@ const CryptoJS = require('crypto-js');
 const jwt = require('jsonwebtoken');
 
 const Register_New_User = async (req,res) => {
+    const userAvator =  req?.files?.avatar?.map((data) => data?.path?.replace(/\\/g, "/"))
     try{
         const newUser = new User({
             name : req.body.name ,
             username : req.body.username,
             email : req.body.email,
             password : CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_KEY).toString(),
+            contact_no : req.body.contact_no,
+            avatar : userAvator,
             country : req.body.country
         })
         const Register = await newUser.save();
         res.send({
-            message:`New User ${Register.name} created Successfully`,
+            message:`New User ${Register?.name} created Successfully`,
             status:201,
             data: Register
         })
@@ -29,7 +32,6 @@ const LoginRegisteredUser = async (req,res,next) => {
     try{
         const email = req.body.email;
         const password = req.body.password;
-    
         const LoginUser = await User.findOne({ email : email });
         const gen_password = CryptoJS.AES.decrypt(LoginUser?.password , process.env.SECRET_KEY);
         const original_password = gen_password.toString(CryptoJS.enc.Utf8);
@@ -75,9 +77,171 @@ const VerifyRegisteredUser = async (req,res) => {
     }
 }
 
+const Update_Existing_User = async (req,res,next) => {
+    const Id = req.id;
+    try{
+        const Update_user = await User.findByIdAndUpdate(
+            { _id : Id },
+            {
+                $set:{
+                    name : req.body.name,
+                    username : req.body.username,
+                    contact_no : req.body.contact_no,
+                    country : req.body.country
+                }
+            },
+            { new : true}
+        )
+    
+        res.send({
+            message: `User Updated Successfully`,
+            data : 204,
+            data : Update_user
+        })
+    }catch(err){
+        res.send({
+            message: `No User Updated`,
+            data : 200,
+            data : Update_user
+        })
+    }
+}
+
+const Delete_Existing_User = async ( req, res, next ) => {
+    const Id = req.id;
+    try{
+        const deleteUser = await User.deleteOne({ _id : Id });
+        const { acknowledged , deletedCount } = deleteUser
+
+        if(acknowledged === true &&  deletedCount === 1){
+            res.send({
+                message:'User Delete Successfully',
+                status : 200
+            })
+        } else{
+            res.send({
+                message:'User Not Delete',
+                status : 200
+            })
+        }
+    }catch(err){
+        res.send({
+            message:'User Not Found',
+            status : 200
+        })
+    }
+}
+
+const User_Forget_Password = async (req,res , next ) => {
+    try{
+    const email = req.query.email;
+    console.log(email)
+        const userfind = await User.findOne({ email : email })
+        if(userfind.email == null){
+            res.send({
+                    message: 'Not OTP generated',
+                    code : 404
+                })
+                next();
+        }
+        else if(userfind.email){
+            const num = Math.floor(Math.random() * 9000) + 1000
+            const nums = await User.findOneAndUpdate(
+                userfind.email  ,
+                {
+                    $set:{
+                        otp : num
+                    }
+                } ,
+                { new : true }
+            )
+            const { otp , email , ...others } = nums
+            res.send({
+                message: 'OTP generated',
+                code : 201,
+                data : { otp , email  }
+            })
+        }
+
+
+}catch(err){
+    res.send({
+        message: 'Not Found OTP',
+        code : 404
+    })
+}
+
+
+}
+
+const OTP_Verification = async (req,res , next) => {
+    try{
+        const typed_OTP = req.query.otp;
+        const typed_email = req.query.email;
+        const data = await User.findOne({ email : typed_email  });
+        if(typed_email  == data?.email &&  typed_OTP == data?.otp) {
+            res.send({
+                message: 'OTP verified',
+                status : 200,
+                data : data?.email
+            })
+        }else{
+            res.send({
+                message: 'OTP Not verified',
+                status : 404
+            }) 
+        }
+    }catch(err){
+        res.send({
+            message: 'Data not found',
+            status : 404
+        }) 
+    }
+}
+
+const User_Reset_Password = async (req,res,next) => {
+    const typed_OTP = req.query.otp;
+    const typed_email = req.query.email;
+    const typed_password = req.body.password
+
+    const data = await User.findOne({ email : typed_email  });
+    if(typed_email  == data?.email &&  typed_OTP == data?.otp) {
+        const gen_password = CryptoJS.AES.decrypt(data?.password , process.env.SECRET_KEY);
+        const original_password = gen_password.toString(CryptoJS.enc.Utf8);
+
+        if(typed_password != original_password){
+               const users =  await User.findOneAndUpdate( 
+                data?.email , 
+                { $set : { password : CryptoJS.AES.encrypt(typed_password, process.env.SECRET_KEY).toString(),}} ,
+                { new : true }
+                 )
+                
+                 const { password , ...others  } = users
+
+            res.send({
+                message : "Password Changed Successfully",
+                status : 201,
+                data :others
+            })
+        }else{
+            res.send({
+                message : "Password Not Changed",
+                status : 404
+            })
+        }
+
+       
+   
+    }
+}
 
 module.exports = {
     Register_New_User,
     LoginRegisteredUser,
-    VerifyRegisteredUser
+    VerifyRegisteredUser,
+    Update_Existing_User,
+    Delete_Existing_User,
+    User_Forget_Password,
+    OTP_Verification,
+    User_Reset_Password
 }

@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
     },
     username: {
         type: String,
+        unique: true,
     },
     email: {
         type: String,
@@ -18,9 +19,20 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    contact_no: {
+        type: String,
+        required: true
+    },
+    avatar: {
+        type: Array,
+        required: true
+    },
+    otp:{
+        type:Number,
+        default : 0
+    },
     country: {
         type: String,
-        unique: true,
         required: true
     },
 },
