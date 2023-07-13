@@ -22,7 +22,7 @@ const port = process.env.PORT;
 
 mongoose.set("strictQuery", true);
 mongoose
-  .connect(process.env.DATABASE_URL)
+  .connect(process.env.DATABASE_URL2)
   .then((res) => console.log(`Database connected successfully`))
   .catch((err) => console.log(`Database not connected`));
 
